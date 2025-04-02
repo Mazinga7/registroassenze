@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Assenze</title>
+    <link rel="website icon" type="icon" href="ODQ3NjU5MTA4ODA4.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Registro Assenze</h1>
+    <input type="text" id="searchBar" placeholder="Cerca per nome o cognome...">
+    <table id="assenzeTable">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Data</th>
+                <th>Motivo</th>
+                <th>Squadriglia</th>
+                <th>Assenze Sq</th>
+                <th>Assenze Reparto</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Le righe verranno aggiunte qui -->
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5">Totale Assenze</td>
+                <td id="totalAssenzeSq">0</td>
+                <td id="totalAssenzeReparto">0</td>
+            </tr>
+        </tfoot>
+    </table>
+    <br>
+    <form id="assenzeForm">
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="cognome" placeholder="Cognome" required>
+        <input type="date" id="data" required>
+        <input type="text" id="motivo" placeholder="Motivo" required>
+        <input type="text" id="Squadriglia" placeholder="Squadriglia">
+        <label>
+            <input type="checkbox" id="sq"> Sq
+        </label>
+        <label>
+            <input type="checkbox" id="reparto"> Reparto
+        </label>
+        <button type="submit">Aggiungi</button>
+    </form>
+
+    <script>
+        document.getElementById('assenzeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+            const data = document.getElementById('data').value;
+            const motivo = document.getElementById('motivo').value;
+            const Squadriglia = document.getElementById('Squadriglia').value;
+            const assenzeSq = document.getElementById('sq').checked ? 1 : 0;
+            const assenzeReparto = document.getElementById('reparto').checked ? 1 : 0;
+
+            const table = document.getElementById('assenzeTable').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+
+            newRow.insertCell(0).textContent = nome;
+            newRow.insertCell(1).textContent = cognome;
+            newRow.insertCell(2).textContent = data;
+            newRow.insertCell(3).textContent = motivo;
+            newRow.insertCell(4).textContent = Squadriglia;
+            newRow.insertCell(5).textContent = assenzeSq;
+            newRow.insertCell(6).textContent = assenzeReparto;
+
+            updateAbsencesCount();
+            saveData();
+            document.getElementById('assenzeForm').reset();
+        });
+
+        document.getElementById('searchBar').addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.getElementById('assenzeTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            let totalAssenzeSq = 0;
+            let totalAssenzeReparto = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const nome = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
+                const cognome = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
+                if (nome.includes(filter) || cognome.includes(filter)) {
+                    rows[i].style.display = '';
+                    totalAssenzeSq += parseInt(rows[i].getElementsByTagName('td')[5].textContent);
+                    totalAssenzeReparto += parseInt(rows[i].getElementsByTagName('td')[6].textContent);
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+
+            document.getElementById('totalAssenzeSq').textContent = totalAssenzeSq;
+            document.getElementById('totalAssenzeReparto').textContent = totalAssenzeReparto;
+        });
+
+        function updateAbsencesCount() {
+            const rows = document.getElementById('assenzeTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            const absences = {};
+
+            for (let i = 0; i < rows.length; i++) {
+                const nome = rows[i].getElementsByTagName('td')[0].textContent;
+                const cognome = rows[i].getElementsByTagName('td')[1].textContent;
+                const key = `${nome}-${cognome}`;
+
+                if (!absences[key]) {
+                    absences[key] = { sq: 0, reparto: 0 };
+                }
+
+                if (rows[i].getElementsByTagName('td')[5].textContent === '1') {
+                    absences[key].sq++;
+                }
+                if (rows[i].getElementsByTagName('td')[6].textContent === '1') {
+                    absences[key].reparto++;
+                }
+            }
+
+            for (let i = 0; i < rows.length; i++) {
+                const nome = rows[i].getElementsByTagName('td')[0].textContent;
+                const cognome = rows[i].getElementsByTagName('td')[1].textContent;
+                const key = `${nome}-${cognome}`;
+
+                rows[i].getElementsByTagName('td')[5].textContent = absences[key].sq;
+                rows[i].getElementsByTagName('td')[6].textContent = absences[key].reparto;
+            }
+        }
+
+        function saveData() {
+            const table = document.getElementById('assenzeTable').getElementsByTagName('tbody')[0];
+            const rows = table.getElementsByTagName('tr');
+            const data = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                const rowData = {
+                    nome: cells[0].textContent,
+                    cognome: cells[1].textContent,
+                    data: cells[2].textContent,
+                    motivo: cells[3].textContent,
+                    Squadriglia: cells[4].textContent,
+                    assenzeSq: cells[5].textContent,
+                    assenzeReparto: cells[6].textContent
+                };
+                data.push(rowData);
+            }
+
+            localStorage.setItem('assenzeData', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('assenzeData'));
+            if (data) {
+                const table = document.getElementById('assenzeTable').getElementsByTagName('tbody')[0];
+                for (const rowData of data) {
+                    const newRow = table.insertRow();
+                    newRow.insertCell(0).textContent = rowData.nome;
+                    newRow.insertCell(1).textContent = rowData.cognome;
+                    newRow.insertCell(2).textContent = rowData.data;
+                    newRow.insertCell(3).textContent = rowData.motivo;
+                    newRow.insertCell(4).textContent = rowData.Squadriglia;
+                    newRow.insertCell(5).textContent = rowData.assenzeSq;
+                    newRow.insertCell(6).textContent = rowData.assenzeReparto;
+                }
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
