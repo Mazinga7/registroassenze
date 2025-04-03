@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 // Percorso del file dove memorizzare i dati
 $file_path = 'C:\\Users\\Anton\\OneDrive\\Desktop\\index\\dati.json';
@@ -32,3 +33,5 @@ file_put_contents($file_path, json_encode($dati_array, JSON_PRETTY_PRINT));
 
 echo "Dati salvati con successo<br>";
 ?>
+=======
+
